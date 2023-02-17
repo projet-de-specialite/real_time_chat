@@ -4,7 +4,8 @@ namespace App\Entity;
 
 use App\Repository\ParticipantRepository;
 use Doctrine\ORM\Mapping as ORM;
-
+use ApiPlatform\Metadata\ApiResource;
+#[ApiResource()]
 #[ORM\Entity(repositoryClass: ParticipantRepository::class)]
 class Participant
 {
