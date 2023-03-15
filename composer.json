@@ -1,6 +1,14 @@
 {
+    "name": "app/real_time_chat_webservice",
+    "description": "This is a real time chat application webservice ",
     "type": "project",
     "license": "proprietary",
+    "authors": [
+        {
+            "name": "EL MEDIOUNI Sohaib",
+            "email": "sohaib.elmediouni23@gmail.com"
+        }
+    ],
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
