@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Conversation;
 use App\Entity\Participant;
 use App\Repository\ConversationRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use mysql_xdevapi\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,17 +19,19 @@ class ConversationController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
     private ConversationRepository $conversationRepository;
+    private UserRepository $userRepository;
     private $userApiResult;
+
     public function __construct(
         EntityManagerInterface $entityManager,
-        ConversationRepository $conversationRepository
+        ConversationRepository $conversationRepository,
+        UserRepository         $userRepository
     )
     {
         $this->entityManager = $entityManager;
         $this->conversationRepository = $conversationRepository;
+        $this->userRepository = $userRepository;
     }
-
-
 
 
     #[Route('/', name: 'newConversations', methods: ['POST'])]
@@ -36,16 +39,16 @@ class ConversationController extends AbstractController
     {
 
         $otherUser = $request->get('otherUser', 0);
-        $otherUser = $this->getUserById($otherUser);
+       // $otherUser = $this->getUserById($otherUser);
         $otherUser = $this->userRepository->find($otherUser);
 
         if (is_null($otherUser)) {
-            throw new \Exception("The user was not found");
+            throw new \Exception("No user Found");
         }
 
         // cannot create a conversation with myself
         if ($otherUser->getId() === $this->getUser()->getId()) {
-            throw new \Exception("That's deep but you cannot create a conversation with yourself");
+            throw new \Exception("Error you can create a conversation with yourself");
         }
 
         // Check if conversation already exists
@@ -100,7 +103,7 @@ class ConversationController extends AbstractController
     {
         try {
             $httpClient = HttpClient::create();
-            $userResult = $httpClient->request('GET', 'https://api.example.com/data'.$id);
+            $userResult = $httpClient->request('GET', 'https://api.example.com/data' . $id);
 
             $content = $userResult->getContent();
 
@@ -112,10 +115,8 @@ class ConversationController extends AbstractController
             ]));
             $response->headers->set('Content-Type', 'application/json');
             return $response;
-        }
-        catch (\Exception $exception)
-        {
-            throw new \Exception("Erreur: ".$exception->getMessage());
+        } catch (\Exception $exception) {
+            throw new \Exception("Erreur: " . $exception->getMessage());
         }
     }
 
@@ -135,10 +136,8 @@ class ConversationController extends AbstractController
             ]));
             $response->headers->set('Content-Type', 'application/json');
             return $response;
-        }
-        catch (\Exception $exception)
-        {
-            throw new \Exception("Erreur: ".$exception->getMessage());
+        } catch (\Exception $exception) {
+            throw new \Exception("Erreur: " . $exception->getMessage());
         }
     }
 
