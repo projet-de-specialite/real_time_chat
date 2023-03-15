@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\ConversationRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
-#[ApiResource()]
+use App\Repository\ConversationRepository;
+use Doctrine\ORM\Mapping as ORM;
+use PhpParser\Node\Scalar\String_;
+use Symfony\Component\Validator\Constraints\Json;
+
 #[ORM\Entity(repositoryClass: ConversationRepository::class)]
+#[ApiResource]
 class Conversation
 {
     #[ORM\Id]
@@ -16,79 +17,74 @@ class Conversation
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\OneToMany(mappedBy: 'convertation', targetEntity: Participant::class)]
-    private Collection $participants;
+    #[ORM\Column]
+    private ?int $sendUserId = null;
 
-    #[ORM\OneToMany(mappedBy: 'Conversation', targetEntity: Message::class)]
-    private Collection $messages;
+    #[ORM\Column]
+    private ?int $receiverUserId = null;
+
+    #[ORM\Column(length: 500)]
+
+    private ?string $message = null;
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
 
     public function __construct()
     {
-        $this->participants = new ArrayCollection();
-        $this->messages = new ArrayCollection();
+        $this->createdAt= new \DateTimeImmutable("now");
     }
+
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * @return Collection<int, Participant>
-     */
-    public function getParticipants(): Collection
+    public function getSendUserId(): ?int
     {
-        return $this->participants;
+        return $this->sendUserId;
     }
 
-    public function addParticipant(Participant $participant): self
+    public function setSendUserId(int $sendUserId): self
     {
-        if (!$this->participants->contains($participant)) {
-            $this->participants->add($participant);
-            $participant->setConvertation($this);
-        }
+        $this->sendUserId = $sendUserId;
 
         return $this;
     }
 
-    public function removeParticipant(Participant $participant): self
+    public function getReceiverUserId(): ?int
     {
-        if ($this->participants->removeElement($participant)) {
-            // set the owning side to null (unless already changed)
-            if ($participant->getConvertation() === $this) {
-                $participant->setConvertation(null);
-            }
-        }
+        return $this->receiverUserId;
+    }
+
+    public function setReceiverUserId(int $receiverUserId): self
+    {
+        $this->receiverUserId = $receiverUserId;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Message>
-     */
-    public function getMessages(): Collection
+    public function getMessage(): ?string
     {
-        return $this->messages;
+        return $this->message;
     }
 
-    public function addMessage(Message $message): self
+    public function setMessage(string $message): self
     {
-        if (!$this->messages->contains($message)) {
-            $this->messages->add($message);
-            $message->setConversation($this);
-        }
+        $this->message = $message;
 
         return $this;
     }
 
-    public function removeMessage(Message $message): self
+    public function getCreatedAt(): ?\DateTimeImmutable
     {
-        if ($this->messages->removeElement($message)) {
-            // set the owning side to null (unless already changed)
-            if ($message->getConversation() === $this) {
-                $message->setConversation(null);
-            }
-        }
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
 
         return $this;
     }
