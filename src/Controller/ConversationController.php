@@ -13,41 +13,61 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
+
 #[Route('/conversations', name: 'conversations.')]
 class ConversationController extends AbstractController
 {
-    private EntityManagerInterface $entityManager;
+private EntityManagerInterface $entityManager;
     private ConversationRepository $conversationRepository;
+    private HubInterface $mercureHub;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        ConversationRepository $conversationRepository
-    )
-    {
+        ConversationRepository $conversationRepository,
+        HubInterface $mercureHub
+    ) {
         $this->entityManager = $entityManager;
         $this->conversationRepository = $conversationRepository;
+        $this->mercureHub = $mercureHub;
     }
 
 
-    #[Route('/', name: 'newConversations', methods: ['POST'])]
-    public function createConversation(Request $request): Response
-    {
-        $currentUserId = json_decode($this->getCurrentUser()->getContent(), true)['data']['id'];
-        $data = json_decode($request->getContent());
-        $conversation = new Conversation();
-        $conversation->setSendUserId($currentUserId);
-        $conversation->setReceiverUserId($data->receiverId);
-        $conversation->setMessage($data->message);
-        $this->entityManager->persist($conversation);
-        $this->entityManager->flush();
-        $response = new Response();
-        $response->setContent(json_encode([
-            'data' => $conversation,
-            'HTTP' => Response::HTTP_CREATED
-        ]));
-        $response->headers->set('Content-Type', 'application/json');
-        return $response;
+ #[Route('/', name: 'newConversations', methods: ['POST'])]
+public function createConversation(Request $request): Response
+{
+    $currentUserId = json_decode($this->getCurrentUser()->getContent(), true)['data']['id'];
+    $data = json_decode($request->getContent());
+    $conversation = new Conversation();
+    $conversation->setSendUserId($currentUserId);
+    $conversation->setReceiverUserId($data->receiverId);
+    $conversation->setMessage($data->message);
+    $this->entityManager->persist($conversation);
+    $this->entityManager->flush();
+
+  //  dd($conversation->getId());
+    // Publish the update to the Mercure hub
+    $update = new Update(
+        'http://127.0.0.1:8000/conversations/',
+        json_encode(['message' => $conversation->getMessage()])
+    );
+
+    try {
+        $this->mercureHub->publish($update);
+        $messageStatus = 'Message published successfully';
+    } catch (\Exception $e) {
+        $messageStatus = 'Error publishing message: ' . $e->getMessage();
     }
+
+    $response = new Response();
+    $response->setContent(json_encode([
+        'data' => $conversation,
+        'messageStatus' => $messageStatus,
+        'HTTP' => Response::HTTP_CREATED
+    ]));
+    $response->headers->set('Content-Type', 'application/json');
+    return $response;
+}
+
 
     public function getCurrentUser(): Response
     {
@@ -97,16 +117,16 @@ class ConversationController extends AbstractController
         return $this->json($messages);
     }
 
-    #[Route('/publish', name: 'publish')]
-    public function publish(HubInterface $hub): Response
-    {
-        $update = new Update(
-            'https://example.com/books/1',
-            json_encode(['status' => 'message reçu'])
-        );
+    // #[Route('/publish', name: 'publish')]
+    // public function publish(HubInterface $hub): Response
+    // {
+    //     $update = new Update(
+    //         'http://localhost:8000/conversations/',
+    //         json_encode(['status' => 'message reçu'])
+    //     );
 
-        $hub->publish($update);
+    //     $hub->publish($update);
 
-        return new Response('published!');
-    }
+    //     return new Response('published!');
+    // }
 }
