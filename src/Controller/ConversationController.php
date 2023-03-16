@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
-#[ApiResource]
 #[Route('/conversations', name: 'conversations.')]
 class ConversationController extends AbstractController
 {
