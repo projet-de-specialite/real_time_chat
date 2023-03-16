@@ -29,6 +29,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-php-
 
+    - name: Test
+      run: ./vendor/bin/phpunit
+
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
