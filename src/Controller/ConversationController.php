@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Entity\Conversation;
 use App\Repository\ConversationRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -10,19 +11,22 @@ use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
+#[ApiResource]
 #[Route('/conversations', name: 'conversations.')]
 class ConversationController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-
+    private ConversationRepository $conversationRepository;
 
     public function __construct(
         EntityManagerInterface $entityManager,
+        ConversationRepository $conversationRepository
     )
     {
         $this->entityManager = $entityManager;
-
+        $this->conversationRepository = $conversationRepository;
     }
 
 
@@ -68,10 +72,42 @@ class ConversationController extends AbstractController
     public function getConversation(): Response
     {
         $currentUserId = json_decode($this->getCurrentUser()->getContent(), true)['data']['id'];
-        $conversationRepository = $this->entityManager->getRepository(ConversationRepository::class);
-        $result = $conversationRepository->find($currentUserId);
+        $result = $this->conversationRepository->find($currentUserId);
         return $this->json($result);
     }
 
+    #[Route('/last-message', name: 'last_message', methods: ['GET'])]
+    public function getLastMessage(): Response
+    {
+        $lastMessage = $this->conversationRepository->findOneBy([], ['createdAt' => 'DESC']);
 
+        if (!$lastMessage) {
+            throw $this->createNotFoundException('No messages found in the database.');
+        }
+        return $this->json($lastMessage->getMessage());
+    }
+
+    #[Route('/messages/{sendUserId}/{receiverUserId}', name: 'messages', methods: ['GET'])]
+    public function getUserMessages(int $sendUserId, int $receiverUserId): Response
+    {
+        $messages = $this->conversationRepository->findBy([
+            'sendUserId' => $sendUserId,
+            'receiverUserId' => $receiverUserId,
+        ], ['createdAt' => 'ASC']);
+
+        return $this->json($messages);
+    }
+
+    #[Route('/publish', name: 'publish')]
+    public function publish(HubInterface $hub): Response
+    {
+        $update = new Update(
+            'https://example.com/books/1',
+            json_encode(['status' => 'message reçu'])
+        );
+
+        $hub->publish($update);
+
+        return new Response('published!');
+    }
 }

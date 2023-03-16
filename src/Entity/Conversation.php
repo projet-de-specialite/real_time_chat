@@ -10,6 +10,7 @@ use Symfony\Component\Validator\Constraints\Json;
 
 #[ORM\Entity(repositoryClass: ConversationRepository::class)]
 #[ApiResource]
+
 class Conversation
 {
     #[ORM\Id]
