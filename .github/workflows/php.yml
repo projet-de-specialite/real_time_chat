@@ -17,6 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Test
+      run: ./vendor/bin/phpunit
+
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
@@ -28,9 +31,6 @@ jobs:
         key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
           ${{ runner.os }}-php-
-
-    - name: Test
-      run: ./vendor/bin/phpunit
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
