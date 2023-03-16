@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Test
-      run: ./vendor/bin/phpunit
+      run: php vendor/bin/phpunit
 
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
