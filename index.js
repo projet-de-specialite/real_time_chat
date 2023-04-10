@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const userRoute = require("./routes/users")
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
     res.send("Hello World !")
 });
 
+app.use("/api/users", userRoute);
 app.listen(3000, () => {
     console.log("server running on port 3000");
 })
