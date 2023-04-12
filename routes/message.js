@@ -1,5 +1,6 @@
 const router = require("express").Router();
-const Message = require("../models/Message");
+const firestore = require("../firebase");
+const admin = require("firebase-admin");
 
 /**
  * @swagger
@@ -51,11 +52,16 @@ const Message = require("../models/Message");
  *         description: Internal server error
  */
 router.post("/", async (req, res) => {
-    const newMessage = new Message(req.body);
+    const newMessage = {
+        conversationId: req.body.conversationId,
+        sender: req.body.sender,
+        text: req.body.text,
+        createdAt: admin.firestore.Timestamp.now(),
+    };
 
     try {
-        const savedMessage = await newMessage.save();
-        res.status(200).json(savedMessage);
+        const savedMessage = await firestore.collection("messages").add(newMessage);
+        res.status(200).json({ id: savedMessage.id, ...newMessage });
     } catch (err) {
         res.status(500).json(err);
     }
@@ -89,9 +95,16 @@ router.post("/", async (req, res) => {
  */
 router.get("/:conversationId", async (req, res) => {
     try {
-        const messages = await Message.find({
-            conversationId: req.params.conversationId,
+        const messagesRef = firestore.collection("messages");
+        const snapshot = await messagesRef
+            .where("conversationId", "==", req.params.conversationId)
+            .get();
+
+        const messages = [];
+        snapshot.forEach((doc) => {
+            messages.push({ id: doc.id, ...doc.data() });
         });
+
         res.status(200).json(messages);
     } catch (err) {
         res.status(500).json(err);

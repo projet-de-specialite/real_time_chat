@@ -1,6 +1,6 @@
 const router = require("express").Router();
-const Conversation = require("../models/Conversation");
-
+const firestore = require("../firebase");
+const admin = require("firebase-admin");
 /**
  * @swagger
  * components:
@@ -8,19 +8,16 @@ const Conversation = require("../models/Conversation");
  *     Conversation:
  *       type: object
  *       required:
- *         - members
+ *         - users
  *       properties:
- *         members:
+ *         users:
  *           type: array
  *           items:
  *             type: string
  *           description: Array of user IDs participating in the conversation
  *       example:
- *         members: {senderId:'6076f7047e8466001570e7d9', receiverId:'6076f7047e8466001570e7da'}
+ *         users: {senderId:'6076f7047e8466001570e7d9', receiverId:'6076f7047e8466001570e7da'}
  */
-
-
-
 
 /**
  * @swagger
@@ -46,18 +43,30 @@ const Conversation = require("../models/Conversation");
  *         description: Internal server error
  */
 router.post("/", async (req, res) => {
-    const newConversation = new Conversation({
-        members: [req.body.senderId, req.body.receiverId],
-    });
+    if (!req.body.senderId || !req.body.receiverId) {
+        return res
+            .status(400)
+            .json({ message: "senderId and receiverId are required" });
+    }
+
+    const newConversation = {
+        users: [req.body.senderId, req.body.receiverId],
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+    };
 
     try {
-        const savedConversation = await newConversation.save();
-        res.status(200).json(savedConversation);
+        const savedConversation = await firestore
+            .collection("conversations")
+            .add(newConversation);
+        res.status(201).json({ id: savedConversation.id, ...newConversation });
     } catch (err) {
-        res.status(500).json(err);
+        console.error(err);
+        res
+            .status(500)
+            .json({ message: "Internal server error", error: err.message });
     }
 });
-
 
 /**
  * @swagger
@@ -88,14 +97,27 @@ router.post("/", async (req, res) => {
 
 router.get("/:userId", async (req, res) => {
     try {
-        const conversation = await Conversation.find({
-            members: { $in: [req.params.userId] },
+        const userId = req.params.userId;
+        const conversationsRef = firestore.collection("conversations");
+        const snapshot = await conversationsRef.get();
+
+        const conversations = [];
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.users.includes(userId)) {
+                conversations.push({ id: doc.id, ...data });
+            }
         });
-        res.status(200).json(conversation);
+
+        res.status(200).json(conversations);
     } catch (err) {
-        res.status(500).json(err);
+        console.error(err);
+        res.status(500).json({ message: "Internal server error", error: err.message });
     }
 });
+
+
+
 
 /**
  * @swagger
@@ -129,10 +151,24 @@ router.get("/:userId", async (req, res) => {
  */
 router.get("/find/:firstUserId/:secondUserId", async (req, res) => {
     try {
-        const conversation = await Conversation.findOne({
-            members: { $all: [req.params.firstUserId, req.params.secondUserId] },
+        const conversationsRef = firestore.collection("conversations");
+        const snapshot = await conversationsRef
+            .where("users", "array-contains", req.params.firstUserId)
+            .get();
+
+        let conversation = null;
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.users.includes(req.params.secondUserId)) {
+                conversation = { id: doc.id, ...data };
+            }
         });
-        res.status(200).json(conversation)
+
+        if (conversation) {
+            res.status(200).json(conversation);
+        } else {
+            res.status(404).json({ message: "Conversation not found" });
+        }
     } catch (err) {
         res.status(500).json(err);
     }

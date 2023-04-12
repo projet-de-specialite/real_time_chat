@@ -1,35 +1,41 @@
 const express = require("express");
 const app = express();
-const mongoose = require("mongoose");
+const admin = require('firebase-admin');
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 
-
 const userRoute = require("./routes/users")
 const conversationRoute = require("./routes/conversation")
 const messageRoute = require("./routes/message")
+
 /** Swagger */
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 dotenv.config();
 
-/**Mongo Db connexion */
-mongoose.connect(process.env.MONGO_URL).then(() => {
-    console.log('Connected to database!');
-})
-    .catch((error) => {
-        console.error('Error Failed to connect to database:', error);
-    });
+const db = require("./firebase");
 
+/** middleware */
+app.use(express.json());
+app.use(helmet());
+app.use(morgan("common"));
+
+/** Routes */
+app.use("/api/users", userRoute);
+app.use("/api/conversations", conversationRoute);
+app.use("/api/messages", messageRoute);
+
+
+/** Swagger Setup */
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'User API',
+            title: 'Chat application microservice',
             version: '1.0.0',
-            description: 'A simple User API',
+            description: 'this is real time chat ',
         },
         servers: [
             {
@@ -42,17 +48,28 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-/** middleware */
-app.use(express.json());
-app.use(helmet());
-app.use(morgan("common"));
-
-/** Routes */
-app.use("/api/users", userRoute);
-app.use("/api/conversation", conversationRoute);
-app.use("/api/messages", messageRoute);
 app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// This middleware function should be added after all other middleware functions
+// and route handlers.
+app.use((req, res, next) => {
+    const error = new Error('Not Found');
+    error.status = 404;
+    next(error);
+});
+
+// Error handling middleware function.
+app.use((error, req, res, next) => {
+    res.status(error.status || 500);
+    res.json({
+        error: {
+            message: error.message
+        }
+    });
+});
 
 app.listen(3000, () => {
     console.log("server running on port 3000");
-})
+});
+
+module.exports = { app, firestore: db };
