@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const admin = require('firebase-admin');
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
