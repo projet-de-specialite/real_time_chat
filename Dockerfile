@@ -11,12 +11,12 @@ USER appuser
 
 RUN npm ci --only=production --ignore-scripts
 
-COPY --chown=appuser:appgroup index.js src ./
+COPY --chown=appuser:appgroup --chmod=440 index.js ./
+COPY --chown=appuser:appgroup src ./
 
 EXPOSE 3000
 
 # Change the permissions of the index.js file to remove write permissions
-RUN chmod -w /usr/src/app/index.js && \
-    chmod -R -w /usr/src/app/*
+RUN chmod -w /usr/src/app/index.js
 
 CMD [ "node", "index.js" ]
