@@ -1,3 +1,4 @@
 node_modules
-.env
+feature/gcp_db
 real-time-chat-383408-b7ee3f34ffaa.json
+.env
