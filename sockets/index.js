@@ -1,6 +1,6 @@
 const io = require("socket.io")(8900, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: ["http://localhost:3000", "http://localhost:3001"],
     },
 });
 
@@ -32,6 +32,7 @@ io.on("connection", (socket) => {
     //send and get message
     socket.on("sendMessage", ({ senderId, receiverId, text }) => {
         const user = getUser(receiverId);
+        console.log("sockets sendMessage", user)
         io.to(user.socketId).emit("getMessage", {
             senderId,
             text,

@@ -3,6 +3,7 @@ const app = express();
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const cors = require('cors');
 
 const userRoute = require("./routes/users")
 const conversationRoute = require("./routes/conversation")
@@ -20,6 +21,22 @@ const db = require("./firebase");
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
+var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            var msg = 'The CORS policy for this site does not ' +
+                'allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: ["GET", "POST"],
+    allowedHeaders: ['*']
+}));
+
 
 /** Routes */
 app.use("/api/users", userRoute);
@@ -67,7 +84,17 @@ app.use((error, req, res, next) => {
     });
 });
 
-app.listen(3000, () => {
+// 'dev', 'staging', 'prod'
+const env = process.env.NODE_ENV;
+
+// Load  .env file
+const result = dotenv.config({ path: `.env.${env}` });
+
+if (result.error) {
+    throw result.error;
+}
+
+app.listen(process.env.SERVER_PORT, () => {
     console.log("server running on port 3000");
 });
 
