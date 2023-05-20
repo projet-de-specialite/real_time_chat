@@ -98,6 +98,7 @@ router.get("/:conversationId", async (req, res) => {
         const messagesRef = firestore.collection("messages");
         const snapshot = await messagesRef
             .where("conversationId", "==", req.params.conversationId)
+            .orderBy("createdAt", "asc")
             .get();
 
         const messages = [];
