@@ -57,7 +57,13 @@ The base URL for the API is [http://localhost:3000](http://localhost:3000)
 
 A Conversation consists of an array of user IDs participating in the conversation.
 
-````json
+| Field            | Type   | Description                                         |
+| ---------------- | ------ | --------------------------------------------------- |
+| users            | Array  | Array of user IDs participating in the conversation |
+| users.senderId   | string | The ID of the sender in the conversation            |
+| users.receiverId | string | The ID of the receiver in the conversation          |
+
+```json
 {
   "users": [
     {
@@ -68,10 +74,17 @@ A Conversation consists of an array of user IDs participating in the conversatio
     }
   ]
 }
+```
 
 ### Message Model
 
 A Message is associated with a specific conversation, and it contains the sender's user ID and the message text.
+
+| Field          | Type   | Description                |
+| -------------- | ------ | -------------------------- |
+| conversationId | string | The ID of the conversation |
+| sender         | string | The ID of the sender       |
+| text           | string | The text of the message    |
 
 ```json
 {
@@ -79,5 +92,4 @@ A Message is associated with a specific conversation, and it contains the sender
   "sender": "6076f7047e8466001570e7d9",
   "text": "Hello, how are you?"
 }
-
-````
+```
