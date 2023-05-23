@@ -1,4 +1,4 @@
-```json
+```.env
 TEST_PORT
 TYPE
 PROJECT_ID
