@@ -4,16 +4,15 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require('cors');
+const fs = require('fs');
 
-const userRoute = require("./routes/users")
-const conversationRoute = require("./routes/conversation")
-const messageRoute = require("./routes/message")
+const userRoute = require("./routes/users");
+const conversationRoute = require("./routes/conversation");
+const messageRoute = require("./routes/message");
 
 /** Swagger */
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-
-dotenv.config();
 
 const db = require("./firebase");
 
@@ -21,6 +20,7 @@ const db = require("./firebase");
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
+
 var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL];
 
 app.use(cors({
@@ -37,12 +37,10 @@ app.use(cors({
     allowedHeaders: ['*']
 }));
 
-
 /** Routes */
 app.use("/api/users", userRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
-
 
 /** Swagger Setup */
 const swaggerOptions = {
@@ -55,7 +53,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: 'http://localhost:3000',
+                url: `http://localhost:${process.env.SERVER_PORT}`,
             },
         ],
     },
@@ -87,15 +85,19 @@ app.use((error, req, res, next) => {
 // 'dev', 'staging', 'prod'
 const env = process.env.NODE_ENV;
 
-// Load  .env file
-const result = dotenv.config({ path: `.env.${env}` });
-
-if (result.error) {
-    throw result.error;
+// Load .env file if it exists and we are in a 'development' environment
+if (env === 'dev') {
+    const envPath = `.env.${env}`;
+    if (fs.existsSync(envPath)) {
+        const result = dotenv.config({ path: envPath });
+        if (result.error) {
+            throw result.error;
+        }
+    }
 }
 
 app.listen(process.env.SERVER_PORT, () => {
-    console.log("server running on port 3000");
+    console.log(`server running on port ${process.env.SERVER_PORT}`);
 });
 
 module.exports = { app, firestore: db };
