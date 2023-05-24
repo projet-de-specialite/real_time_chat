@@ -4,6 +4,12 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require('cors');
+const fs = require('fs');
+const swaggerAutogen = require('swagger-autogen')();
+
+const client = require('prom-client');
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics({ timeout: 5000 });
 
 const userRoute = require("./routes/users")
 const conversationRoute = require("./routes/conversation")
@@ -11,7 +17,6 @@ const messageRoute = require("./routes/message")
 
 /** Swagger */
 const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
 
 dotenv.config();
 
@@ -37,37 +42,20 @@ app.use(cors({
     allowedHeaders: ['*']
 }));
 
-
 /** Routes */
 app.use("/api/users", userRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
 
-
 /** Swagger Setup */
-const swaggerOptions = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'Chat application microservice',
-            version: '1.0.0',
-            description: 'this is real time chat ',
-        },
-        servers: [
-            {
-                url: 'http://localhost:3000',
-            },
-        ],
-    },
-    apis: ['./routes/*.js'],
-};
+const outputFile = './swagger_output.json';
+const endpointsFiles = ['./routes/users.js', './routes/conversation.js', './routes/message.js'];
 
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
+swaggerAutogen(outputFile, endpointsFiles).then(() => {
+    const swaggerDocument = require('./swagger_output.json');
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+});
 
-app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// This middleware function should be added after all other middleware functions
-// and route handlers.
 app.use((req, res, next) => {
     const error = new Error('Not Found');
     error.status = 404;
@@ -84,6 +72,11 @@ app.use((error, req, res, next) => {
     });
 });
 
+app.get('/metrics', (req, res) => {
+    res.set('Content-Type', client.register.contentType);
+    res.end(client.register.metrics());
+});
+
 // 'dev', 'staging', 'prod'
 const env = process.env.NODE_ENV;
 
@@ -94,7 +87,7 @@ if (result.error) {
     throw result.error;
 }
 
-app.listen(process.env.SERVER_PORT, () => {
+app.listen(6000, () => {
     console.log("server running on port 3000");
 });
 
