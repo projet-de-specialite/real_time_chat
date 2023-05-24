@@ -5,20 +5,17 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require('cors');
 const fs = require('fs');
-const swaggerAutogen = require('swagger-autogen')();
 
 const client = require('prom-client');
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics({ timeout: 5000 });
 
-const userRoute = require("./routes/users")
-const conversationRoute = require("./routes/conversation")
-const messageRoute = require("./routes/message")
+const userRoute = require("./routes/users");
+const conversationRoute = require("./routes/conversation");
+const messageRoute = require("./routes/message");
 
 /** Swagger */
 const swaggerUi = require('swagger-ui-express');
-
-dotenv.config();
 
 const db = require("./firebase");
 
@@ -26,6 +23,7 @@ const db = require("./firebase");
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
+
 var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL];
 
 app.use(cors({
@@ -48,8 +46,22 @@ app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
 
 /** Swagger Setup */
-const outputFile = './swagger_output.json';
-const endpointsFiles = ['./routes/users.js', './routes/conversation.js', './routes/message.js'];
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Chat application microservice',
+            version: '1.0.0',
+            description: 'this is real time chat ',
+        },
+        servers: [
+            {
+                url: `http://localhost:${process.env.SERVER_PORT}`,
+            },
+        ],
+    },
+    apis: ['./routes/*.js'],
+};
 
 swaggerAutogen(outputFile, endpointsFiles).then(() => {
     const swaggerDocument = require('./swagger_output.json');
@@ -80,15 +92,19 @@ app.get('/metrics', (req, res) => {
 // 'dev', 'staging', 'prod'
 const env = process.env.NODE_ENV;
 
-// Load  .env file
-const result = dotenv.config({ path: `.env.${env}` });
-
-if (result.error) {
-    throw result.error;
+// Load .env file if it exists and we are in a 'development' environment
+if (env === 'dev') {
+    const envPath = `.env.${env}`;
+    if (fs.existsSync(envPath)) {
+        const result = dotenv.config({ path: envPath });
+        if (result.error) {
+            throw result.error;
+        }
+    }
 }
 
-app.listen(6000, () => {
-    console.log("server running on port 3000");
+app.listen(process.env.SERVER_PORT, () => {
+    console.log(`server running on port ${process.env.SERVER_PORT}`);
 });
 
 module.exports = { app, firestore: db };
