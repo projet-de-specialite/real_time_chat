@@ -86,13 +86,12 @@ app.use((error, req, res, next) => {
 const env = process.env.NODE_ENV;
 
 // Load .env file if it exists and we are in a 'development' environment
-if (env === 'dev') {
-    const envPath = `.env.${env}`;
-    if (fs.existsSync(envPath)) {
-        const result = dotenv.config({ path: envPath });
-        if (result.error) {
-            throw result.error;
-        }
+
+const envPath = `.env.${env}`;
+if (fs.existsSync(envPath)) {
+    const result = dotenv.config({ path: envPath });
+    if (result.error) {
+        throw result.error;
     }
 }
 
