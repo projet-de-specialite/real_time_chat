@@ -1,6 +1,7 @@
 const io = require("socket.io")(8900, {
     cors: {
-        origin: ["http://localhost:3000", "http://localhost:3001", "https://www.piesocket.com/socketio-tester"],
+        origin: ["http://localhost:3000", "http://localhost:3001", "https://www.piesocket.com/socketio-tester",
+        process.env.SERVER_URL],
         methods: ["GET", "POST"],
         allowedHeaders: ['*']
     },

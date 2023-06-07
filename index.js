@@ -53,7 +53,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: `http://localhost:3000`,
+                url: process.env.SERVER_URL,
             },
         ],
     },
@@ -96,8 +96,8 @@ if (env === 'dev') {
     }
 }
 
-app.listen(3000, () => {
-    //   console.log(`server running on port ${process.env.SERVER_PORT}`);
+app.listen(process.env.SERVER_PORT, () => {
+    console.log(`server running on port ${process.env.SERVER_URL}`);
 });
 
 module.exports = { app, firestore: db };
