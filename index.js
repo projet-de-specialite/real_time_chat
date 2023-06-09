@@ -18,7 +18,25 @@ const db = require("./firebase");
 
 /** middleware */
 app.use(express.json());
-app.use(helmet());
+// app.use(helmet());
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+                fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+                scriptSrc: ["'self'", "'unsafe-inline'", "https: 'unsafe-eval'"],
+                imgSrc: ["'self'", 'data:'],
+                connectSrc: ["'self'"],
+                reportUri: '/report-violation',
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: [],
+            },
+        },
+    })
+);
+
 app.use(morgan("common"));
 
 var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL];
