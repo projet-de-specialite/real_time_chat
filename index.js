@@ -4,8 +4,10 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require('cors');
+const db = require("./firebase");
 const fs = require('fs');
 
+const authRoute = require("./routes/auth");
 const userRoute = require("./routes/users");
 const conversationRoute = require("./routes/conversation");
 const messageRoute = require("./routes/message");
@@ -14,28 +16,13 @@ const messageRoute = require("./routes/message");
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
-const db = require("./firebase");
+
+
+//const { auth } = require("firebase-admin");
 
 /** middleware */
 app.use(express.json());
-// app.use(helmet());
-app.use(
-    helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-                fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-                scriptSrc: ["'self'", "'unsafe-inline'", "https: 'unsafe-eval'"],
-                imgSrc: ["'self'", 'data:'],
-                connectSrc: ["'self'"],
-                reportUri: '/report-violation',
-                objectSrc: ["'none'"],
-                upgradeInsecureRequests: [],
-            },
-        },
-    })
-);
+app.use(helmet());
 
 app.use(morgan("common"));
 
@@ -56,6 +43,7 @@ app.use(cors({
 }));
 
 /** Routes */
+app.use("/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
@@ -106,14 +94,15 @@ const env = process.env.NODE_ENV;
 // Load .env file if it exists and we are in a 'development' environment
 
 const envPath = `.env.${env}`;
-if (fs.existsSync(envPath)) {
-    const result = dotenv.config({ path: envPath });
-    if (result.error) {
-        throw result.error;
-    }
+
+const result = dotenv.config({ path: envPath });
+if (result.error) {
+    throw result.error;
 }
 
+
 app.listen(process.env.SERVER_PORT, () => {
+    console.log(process.env.SERVER_PORT);
     console.log(`server running on port ${process.env.SERVER_URL}`);
 });
 
