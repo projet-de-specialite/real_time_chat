@@ -15,8 +15,7 @@ RUN chown -R app:app /usr/src/app
 USER app
 
 
-COPY src ./src
-
+COPY index.js .
 
 EXPOSE 5000
 
