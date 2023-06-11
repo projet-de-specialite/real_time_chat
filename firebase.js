@@ -1,5 +1,11 @@
-const Firestore = require('@google-cloud/firestore');
+console.log("Loading firebase.js");
 
-const firestore = new Firestore();
+const admin = require("firebase-admin");
+const serviceAccount = require("./credentials");
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+});
+
+const firestore = admin.firestore();
 
 module.exports = firestore;

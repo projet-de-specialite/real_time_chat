@@ -16,7 +16,7 @@ const admin = require("firebase-admin");
  *             type: string
  *           description: Array of user IDs participating in the conversation
  *       example:
- *         users: {senderId:'6076f7047e8466001570e7d9', receiverId:'6076f7047e8466001570e7da'}
+ *         users: [senderId: '6076f7047e8466001570e7d9', receiverId: '6076f7047e8466001570e7da']
  */
 
 /**
@@ -33,7 +33,7 @@ const admin = require("firebase-admin");
  *           schema:
  *             $ref: '#/components/schemas/Conversation'
  *     responses:
- *       200:
+ *       201:
  *         description: A conversation object
  *         content:
  *           application/json:
@@ -67,7 +67,6 @@ router.post("/", async (req, res) => {
             .json({ message: "Internal server error", error: err.message });
     }
 });
-
 /**
  * @swagger
  * /api/conversations/{userId}:
@@ -94,7 +93,6 @@ router.post("/", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-
 router.get("/:userId", async (req, res) => {
     try {
         const userId = req.params.userId;
