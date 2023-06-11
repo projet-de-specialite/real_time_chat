@@ -1,8 +1,8 @@
-const axios = require('axios');
+const axios = require("axios");
 const router = require("express").Router();
 const admin = require("firebase-admin");
 const firestore = admin.firestore();
-const usersCollection = firestore.collection('users');
+const usersCollection = firestore.collection("users");
 
 /**
  * @swagger
@@ -11,97 +11,39 @@ const usersCollection = firestore.collection('users');
  *   description: The User managing api
  */
 /**
-
-/**
- * @swagger
- * /api/users/{id}:
- *   get:
- *     summary: Retrieve a user by ID from JSONPlaceholder API
- *     tags:
- *       - Users
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: User ID
- *     responses:
- *       200:
- *         description: A user object
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *       500:
- *         description: Internal server error
- */
-router.get("/:id", async (req, res) => {
-    try {
-        const id = req.params.id;
-        console.log("id", id);
-        const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${id}`);
-        console.log(response.data);
-        res.status(200).json(response.data);
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
+ 
 
 
 /**
  * @swagger
- * /api/users:
+ * /api/users/all:
  *   get:
  *     tags:
  *       - Users
- *     summary: Retrieve a user by userId or username
- *     parameters:
- *       - in: query
- *         name: userId
- *         schema:
- *           type: string
- *         description: The user id
- *       - in: query
- *         name: username
- *         schema:
- *           type: string
- *         description: The user's username
+ *     summary: Retrieve all users
  *     responses:
  *       200:
- *         description: The user object
+ *         description: An array of user objects
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
- *       404:
- *         description: User not found
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
  *       500:
  *         description: Internal server error
  */
-
-
-//get a user
-router.get("/", async (req, res) => {
-    const userId = req.query.userId;
-    const username = req.query.username;
+router.get("/all", async (req, res) => {
     try {
-        let user;
-        if (userId) {
-            const userDoc = await usersCollection.doc(userId).get();
-            user = userDoc.data();
-        } else if (username) {
-            const userSnapshot = await usersCollection.where('username', '==', username).get();
-            userSnapshot.forEach(doc => {
-                user = doc.data();
-            });
-        }
-        if (user) {
-            const { password, updatedAt, ...other } = user;
-            res.status(200).json(other);
-        } else {
-            res.status(404).json("User not found");
-        }
+        const usersSnapshot = await usersCollection.get();
+        let users = [];
+        usersSnapshot.forEach((doc) => {
+            let userData = doc.data();
+            const { password, ...other } = userData;
+            const userWithId = { id: doc.id, ...other }; // Include the id field
+            users.push(userWithId);
+        });
+        res.status(200).json(users);
     } catch (err) {
         console.error(err);
         res.status(500).json(err);
@@ -152,11 +94,70 @@ router.get("/friends/:userId", async (req, res) => {
             const { _id, username, profilePicture } = friend;
             friendList.push({ _id, username, profilePicture });
         });
-        res.status(200).json(friendList)
+        res.status(200).json(friendList);
     } catch (err) {
         res.status(500).json(err);
     }
 });
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Retrieve a user by userId or username
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: The user id
+ *       - in: query
+ *         name: username
+ *         schema:
+ *           type: string
+ *         description: The user's username
+ *     responses:
+ *       200:
+ *         description: The user object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+
+//get a user
+router.get("/", async (req, res) => {
+    const userId = req.query.userId;
+    const username = req.query.username;
+    try {
+        let user;
+        if (userId) {
+            const userDoc = await usersCollection.doc(userId).get();
+            user = userDoc.data();
+        } else if (username) {
+            const userSnapshot = await usersCollection
+                .where("username", "==", username)
+                .get();
+            userSnapshot.forEach((doc) => {
+                user = doc.data();
+            });
+        }
+        if (user) {
+            const { password, updatedAt, ...other } = user;
+            res.status(200).json(other);
+        } else {
+            res.status(404).json("User not found");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json(err);
+    }
+});
 
 module.exports = router;

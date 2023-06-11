@@ -51,30 +51,35 @@ const usersCollection = firestore.collection('users');
  *       500:
  *         description: Internal server error
  */
-//REGISTER
-router.post("/register", async (req, res) => {
+router.post("/signup", async (req, res) => {
     try {
-        //generate new password
+        // generate new password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-        //create new user
+        // create new user
         const newUser = {
             username: req.body.username,
             email: req.body.email,
             password: hashedPassword,
         };
 
-        //save user and respond
+        // save user and respond
         const userDoc = await usersCollection.add(newUser);
         const userId = userDoc.id;
-        await usersCollection.doc(userId).update({ userId: userId }); // add the auto-generated ID to the document with key 'userId'
-        const user = { userId: userId, ...newUser };
+
+        // update user document with the auto-generated ID as userId
+        await usersCollection.doc(userId).update({ id: userId });
+
+        // add userId and other user data to the response
+        const user = { id: userId, ...newUser };
         res.status(200).json(user);
     } catch (err) {
-        res.status(500).json(err)
+        res.status(500).json(err);
     }
 });
+
+
 
 
 /**
@@ -113,9 +118,9 @@ router.post("/register", async (req, res) => {
  *         description: Internal server error
  */
 //LOGIN
-router.post("/login", async (req, res) => {
+router.post("/signin", async (req, res) => {
     try {
-        const userSnapshot = await usersCollection.where('email', '==', req.body.email).limit(1).get();
+        const userSnapshot = await usersCollection.where('username', '==', req.body.username).limit(1).get();
         if (userSnapshot.empty) {
             res.status(404).json("user not found");
             return;

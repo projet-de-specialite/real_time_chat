@@ -26,7 +26,7 @@ app.use(helmet());
 
 app.use(morgan("common"));
 
-var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL];
+var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL, 'http://localhost:3000'];
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -59,7 +59,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: process.env.SERVER_URL,
+                url: 'localhost:5000',
             },
         ],
     },
