@@ -4,12 +4,13 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require('cors');
+const db = require("./firebase");
 const fs = require('fs');
 
 const client = require('prom-client');
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics({ timeout: 5000 });
-
+const authRoute = require("./routes/auth");
 const userRoute = require("./routes/users");
 const conversationRoute = require("./routes/conversation");
 const messageRoute = require("./routes/message");
@@ -18,14 +19,16 @@ const messageRoute = require("./routes/message");
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
-const db = require("./firebase");
+
+
+//const { auth } = require("firebase-admin");
 
 /** middleware */
 app.use(express.json());
 app.use(helmet());
 app.use(morgan("common"));
 
-var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL];
+var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL, 'http://localhost:3000'];
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -42,6 +45,7 @@ app.use(cors({
 }));
 
 /** Routes */
+app.use("/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/messages", messageRoute);
@@ -57,7 +61,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: process.env.SERVER_URL,
+                url: 'localhost:5000',
             },
         ],
     },
@@ -100,7 +104,9 @@ if (result.error) {
     throw result.error;
 }
 
+
 app.listen(process.env.SERVER_PORT, () => {
+    console.log(process.env.SERVER_PORT);
     console.log(`server running on port ${process.env.SERVER_URL}`);
 });
 

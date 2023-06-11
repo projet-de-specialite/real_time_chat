@@ -1,7 +1,7 @@
 const io = require("socket.io")(8900, {
     cors: {
         origin: ["http://localhost:3000", "http://localhost:3001", "https://www.piesocket.com/socketio-tester",
-        process.env.SERVER_URL],
+            process.env.SERVER_URL],
         methods: ["GET", "POST"],
         allowedHeaders: ['*']
     },
@@ -22,32 +22,23 @@ const getUser = (userId) => {
     return users.find((user) => user.userId === userId);
 };
 
-// Error handling middleware
-io.use((socket, next) => {
-    try {
-        console.log(`Attempted connection from ${socket.id}`);
-        next();
-    } catch (error) {
-        console.error(`Error during connection: ${error}`);
-        next(error);
-    }
-});
-
 io.on("connection", (socket) => {
-    //when connect
-    console.log("User is connected");
+    //when ceonnect
+    console.log("a user connected.");
+
     //take userId and socketId from user
     socket.on("addUser", (userId) => {
-        console.log("connection", userId);
+        console.log(userId);
         addUser(userId, socket.id);
         io.emit("getUsers", users);
+        console.log("getUsers", users);
     });
 
     //send and get message
     socket.on("sendMessage", ({ senderId, receiverId, text }) => {
         const user = getUser(receiverId);
         console.log("sockets sendMessage", user)
-        if (user) { // Check if user is defined
+        if (user) {
             io.to(user.socketId).emit("getMessage", {
                 senderId,
                 text,
@@ -56,15 +47,11 @@ io.on("connection", (socket) => {
             console.log(`No user found with id: ${receiverId}`);
         }
     });
+
     //when disconnect
     socket.on("disconnect", () => {
         console.log("a user disconnected!");
         removeUser(socket.id);
         io.emit("getUsers", users);
     });
-});
-
-io.on('error', (error) => {
-    // Handle the error
-    console.error(`Server-side error: ${error}`);
 });
