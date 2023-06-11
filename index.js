@@ -68,7 +68,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: server_url,
+                url: `${server_url}`,
             },
         ],
     },
