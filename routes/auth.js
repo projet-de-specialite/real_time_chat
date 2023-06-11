@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const admin = require("firebase-admin");
 
 const firestore = admin.firestore();

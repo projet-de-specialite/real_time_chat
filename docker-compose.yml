@@ -5,22 +5,48 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8000:6000
+      - 5000:5000
+      - 443:443   # Expose port 443 for HTTPS
     environment:
       - NODE_ENV=dev
+      - SERVER_URL=https://localhost    # Update the server URL to use HTTPS
     volumes:
-      - .:/usr/src/app   # Mount the current directory as a volume
-  prometheus:
-    build:
-      context: ./prometheus
-      dockerfile: Dockerfile
-    ports:
-      - 9090:9090
-    depends_on:
-      - app
-  grafana:
-    image: grafana/grafana
-    ports:
-      - 3002:3000
-    depends_on:
-      - prometheus
+      - .:/usr/src/app
+      - ./ssl:/etc/ssl    # Mount the SSL certificate directory
+    networks:
+      - mynetwork
+
+  # prometheus:
+  #   build:
+  #     context: ./prometheus
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 9090:9090
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   depends_on:
+  #     - app
+  #     - node-exporter   # New service dependency
+  #   networks:
+  #     - mynetwork
+
+  # grafana:
+  #   image: grafana/grafana
+  #   ports:
+  #     - 3002:3000
+  #   volumes:
+  #     - ./grafana_data:/var/lib/grafana
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - mynetwork
+
+  # node-exporter:
+  #   image: prom/node-exporter:v1.2.2
+  #   ports:
+  #     - 9100:9100
+  #   networks:
+  #     - mynetwork
+
+networks:
+  mynetwork:

@@ -18,7 +18,7 @@ COPY routes ./routes
 
 
 # Expose the port on which your application will run
-EXPOSE 6000
+EXPOSE 5000
 
 # Set any necessary environment variables
 ENV NODE_ENV production
