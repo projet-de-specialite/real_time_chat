@@ -18,7 +18,7 @@ services:
     environment:
       - NODE_ENV=dev
     volumes:
-      - .:/usr/src/app # Mount the SSL certificate directory
+      - .:/usr/src/app
     networks:
       - monitor-net
 
