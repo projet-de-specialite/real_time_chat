@@ -16,6 +16,7 @@ const messageRoute = require("./routes/message");
 
 /** Swagger */
 const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
 
 const db = require("./firebase");
 
@@ -63,10 +64,8 @@ const swaggerOptions = {
     apis: ['./routes/*.js'],
 };
 
-swaggerAutogen(outputFile, endpointsFiles).then(() => {
-    const swaggerDocument = require('./swagger_output.json');
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-});
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use((req, res, next) => {
     const error = new Error('Not Found');
