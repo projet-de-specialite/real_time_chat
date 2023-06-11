@@ -22,25 +22,7 @@ const db = require("./firebase");
 
 /** middleware */
 app.use(express.json());
-// app.use(helmet());
-app.use(
-    helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-                fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-                scriptSrc: ["'self'", "'unsafe-inline'", "https: 'unsafe-eval'"],
-                imgSrc: ["'self'", 'data:'],
-                connectSrc: ["'self'"],
-                reportUri: '/report-violation',
-                objectSrc: ["'none'"],
-                upgradeInsecureRequests: [],
-            },
-        },
-    })
-);
-
+app.use(helmet());
 app.use(morgan("common"));
 
 var allowedOrigins = [process.env.FRONT_URL, process.env.FRONT_URL];
@@ -112,11 +94,10 @@ const env = process.env.NODE_ENV;
 // Load .env file if it exists and we are in a 'development' environment
 
 const envPath = `.env.${env}`;
-if (fs.existsSync(envPath)) {
-    const result = dotenv.config({ path: envPath });
-    if (result.error) {
-        throw result.error;
-    }
+
+const result = dotenv.config({ path: envPath });
+if (result.error) {
+    throw result.error;
 }
 
 app.listen(process.env.SERVER_PORT, () => {
