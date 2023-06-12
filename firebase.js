@@ -1,20 +1,10 @@
-const admin = require('firebase-admin');
+console.log("Loading firebase.js");
 
-let serviceAccount;
-
-try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-} catch (error) {
-    console.error('Unable to parse FIREBASE_SERVICE_ACCOUNT_KEY:', error);
-}
-
-if (serviceAccount) {
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-} else {
-    console.error('Failed to initialize Firebase admin SDK');
-}
+const admin = require("firebase-admin");
+const serviceAccount = require("./credentials");
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+});
 
 const firestore = admin.firestore();
 
